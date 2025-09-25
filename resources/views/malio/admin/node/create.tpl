@@ -67,7 +67,8 @@
                                 <div class="form-group form-group-label">
                                     <label for="mu_only">
                                         <label class="floating-label" for="sort">单端口多用户启用</label>
-                                        <select id="mu_only" class="form-control maxwidth-edit" name="is_multi_user">
+                                        <!-- {{ AURA-X: Fix - 修复字段名不匹配，统一使用mu_only. Source: 与malio项目保持一致 }}-->
+                                        <select id="mu_only" class="form-control maxwidth-edit" name="mu_only">
                                             <option value="-1">只启用普通端口</option>
                                             <option value="0">单端口多用户与普通端口并存</option>
                                             <option value="1">只启用单端口多用户</option>
@@ -113,6 +114,10 @@
                                             <option value="12">V2Ray 中转</option>
                                             <option value="13">Shadowsocks V2Ray-Plugin</option>
                                             <option value="14">Trojan</option>
+                                            <!-- {{ AURA-X: Add - 添加VLESS和HY2节点类型选项. Source: malio项目移植 }} -->
+                                            <option value="15">VLESS</option>
+                                            <option value="16">VLESS Reality</option>
+                                            <option value="17">Hysteria2</option>
                                         </select>
                                     </div>
                                 </div>
@@ -198,6 +203,7 @@
     $('#main_form').validate({
         rules: {
             name: {required: true},
+            server: {required: true},
             method: {required: true},
             rate: {required: true},
             info: {required: true},

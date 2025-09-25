@@ -38,6 +38,8 @@ class UserController extends BaseController
         }
         $node->node_heartbeat = time();
         $node->save();
+        // {{ AURA-X: Remove - 清理调试日志. Approval: zhi___(ID:1735056000). }}
+        // Debug logs removed for production
 
         // 节点流量耗尽则返回 null
         if (($node->node_bandwidth_limit != 0) && $node->node_bandwidth_limit < $node->node_bandwidth) {

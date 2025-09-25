@@ -492,7 +492,8 @@ class UserController extends BaseController
                 if ($log['node_id'] != $node->id) {
                     continue;
                 }
-                if (in_array($sort, array(0, 7, 8, 10, 11, 12, 13, 14))) {
+                // {{ AURA-X: Modify - 添加VLESS和HY2节点类型(15,16,17)到在线用户数检查列表. Approval: zhi___(ID:1735056000). }}
+                if (in_array($sort, array(0, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17))) {
                     $array_node['online_user'] = $log['online_user'];
                 } else {
                     $array_node['online_user'] = -1;
@@ -504,7 +505,8 @@ class UserController extends BaseController
             // 0: new node; -1: offline; 1: online
             $node_heartbeat = $node->node_heartbeat + 300;
             $array_node['online'] = -1;
-            if (!in_array($sort, array(0, 7, 8, 10, 11, 12, 13, 14)) || $node_heartbeat == 300) {
+            // {{ AURA-X: Modify - 添加VLESS和HY2节点类型(15,16,17)到在线检查列表. Approval: zhi___(ID:1735056000). }}
+            if (!in_array($sort, array(0, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17)) || $node_heartbeat == 300) {
                 $array_node['online'] = 0;
             } elseif ($node_heartbeat > time()) {
                 $array_node['online'] = 1;
@@ -599,7 +601,8 @@ class UserController extends BaseController
                 }
 
 
-                if (in_array($node->sort, array(0, 7, 8, 10, 11, 12, 13))) {
+                // {{ AURA-X: Modify - 添加VLESS和HY2节点类型(14,15,16,17)到在线用户统计. Approval: zhi___(ID:1735056000). }}
+                if (in_array($node->sort, array(0, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17))) {
                     $node_tempalive = $node->getOnlineUserCount();
                     $node_prealive[$node->id] = $node_tempalive;
                     if ($node->isNodeOnline() !== null) {

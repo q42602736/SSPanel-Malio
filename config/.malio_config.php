@@ -71,7 +71,8 @@ $Malio_Config['phone_area_code'] = [    // 发送短信支持的手机区号
 
 
 ####### 订阅设置 #######
-$Malio_Config['support_sub_type'] = ['ss','ssr','v2ray'];    // 选择网站支持的代理协议，会影响复制订阅链接和一键导入按钮的显示。比如删除这个参数里的ss，则 Surge 订阅按钮不会显示再首页上，教程里也不会显示Surge教程
+// {{ AURA-X: Add - 添加VLESS和HY2协议支持. Source: malio项目移植 }}
+$Malio_Config['support_sub_type'] = ['ss','ssr','v2ray','vless','hysteria2'];    // 选择网站支持的代理协议，会影响复制订阅链接和一键导入按钮的显示。比如删除这个参数里的ss，则 Surge 订阅按钮不会显示再首页上，教程里也不会显示Surge教程
 $Malio_Config['quantumult_mode'] = 'single';   // quantumult 一键导入按钮的模式，可选 "single"或"all"。选择single的话只能导入一种订阅（比如只能导入SSR订阅）。选择all的话可以一次性导入全部订阅类型（SS+SSR+V2RAY），但是导入后需要用户手动更新订阅才会出现节点。
 $Malio_Config['quantumult_sub_type'] = 'v2ray';    // quanmutult 的一键导入的订阅类型，可选 ss、ssr、v2ray (仅在quantumult_mode设置为single时生效)
 $Malio_Config['enable_copy_urls_to_clipboard'] = true;   // 设置为 true 时，首页会显示 批量复制XX链接到剪贴板 的按钮，不建议启用。

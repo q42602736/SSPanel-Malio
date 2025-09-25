@@ -68,7 +68,8 @@
               {foreach $nodes as $node}
               {if $node['class'] == $node_class}
               <div class="col-12 col-sm-12 col-lg-6">
-                {if $node['sort'] == 11}
+                <!-- {{ AURA-X: Modify - 添加SS、VLESS和HY2节点使用静态模态框. Source: 修复SS节点详情显示 }} -->
+                {if $node['sort'] == 0 || $node['sort'] == 11 || $node['sort'] == 15 || $node['sort'] == 16 || $node['sort'] == 17}
                 <div class="card" {if $user->class>0} data-toggle="modal" data-target="#node-modal-{$node['id']}"{/if}>
                   {else}
                   <div class="card" {if $user->class >0}onclick="urlChange('{$node['id']}',0,{if $relay_rule != null}{$relay_rule->id}{else}0{/if})"{/if}>
@@ -79,6 +80,7 @@
                           {$region = substr($node['name'],0,6)}
                           <img alt="image" class="mr-3 rounded-circle" width="50" src="/theme/malio/assets/modules/flag-icon-css/flags/1x1/{if $malio_config['flag_mode']=='node-name'}{if $flags[$region] != ''}{$flags[$region]}{else}un{/if}{else}{$node['status']}{/if}.svg">
                           <div class="media-body">
+                            <!-- {{ AURA-X: Revert - 移除HY2节点强制在线状态，应依赖实际检测结果. Source: 修复HY2节点错误显示在线 }} -->
                             <div class="media-title node-status {if $node['online']=='1' or $node['sort'] == 14}node-is-online{else}node-is-offline{/if}">{current(explode(" - ", $node['name']))}</div>
                             <div class=" text-job text-muted">{$node['info']}</div>
                           </div>
@@ -128,7 +130,28 @@
 
   {foreach $nodes as $node}
   {if $user->class >= $node['class']}
-  {if $node['sort'] == 11}
+  <!-- {{ AURA-X: Add - 添加SS节点模态框支持. Source: 补充缺失的SS节点详情 }} -->
+  {if $node['sort'] == 0}
+  <div class="modal fade" tabindex="-1" role="dialog" id="node-modal-{$node['id']}">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{current(explode(" - ", $node['name']))}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">节点类型: <code>Shadowsocks</code></div>
+          <div class="mb-2">服务器地址: <code>{$node['raw_node']->server}</code></div>
+          <div class="mb-2">端口: <code>{$node['raw_node']->port}</code></div>
+          <div class="mb-2">加密方式: <code>{$node['raw_node']->method}</code></div>
+          <div class="mb-2">密码: <code>{$user->passwd}</code></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {elseif $node['sort'] == 11}
   <div class="modal fade" tabindex="-1" role="dialog" id="node-modal-{$node['id']}">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -155,6 +178,45 @@
           <div class="mb-2">TLS: <code>TLS</code></div>
           {/if}
           <div class="mb-2">{$i18n->get('vmess-url')}: <code>{URL::getV2Url($user, $node['raw_node'])}</code></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- {{ AURA-X: Fix - 修复Smarty语法错误，elseif应该在if结束前. Source: 修复500错误 }} -->
+  {elseif $node['sort'] == 15 || $node['sort'] == 16}
+  <div class="modal fade" tabindex="-1" role="dialog" id="node-modal-{$node['id']}">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{current(explode(" - ", $node['name']))}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- {{ AURA-X: Fix - 简化VLESS节点信息显示，避免模板错误. Source: 修复500错误 }} -->
+          <div class="mb-2">节点类型: <code>VLESS</code></div>
+          <div class="mb-2">UUID: <code>{$user->uuid}</code></div>
+          <div class="mb-2">节点配置: <code>{$node['raw_node']->server}</code></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- {{ AURA-X: Add - 添加HY2节点模态框支持. Source: HY2协议移植 }} -->
+  {elseif $node['sort'] == 17}
+  <div class="modal fade" tabindex="-1" role="dialog" id="node-modal-{$node['id']}">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{current(explode(" - ", $node['name']))}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">节点类型: <code>Hysteria2</code></div>
+          <div class="mb-2">UUID: <code>{$user->uuid}</code></div>
+          <div class="mb-2">节点配置: <code>{$node['raw_node']->server}</code></div>
         </div>
       </div>
     </div>

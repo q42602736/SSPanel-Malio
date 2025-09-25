@@ -1479,8 +1479,9 @@ class LinkController extends BaseController
                 $Rule['type'] = 'ss';
                 $getListExtend = $Rule['extend'] ? self::getListExtend($user, 'ss') : [];
                 break;
-            case 3: // V2
-                $Rule['type'] = 'vmess';
+            case 3: // V2RAY (包含所有现代协议)
+                // {{ AURA-X: Modify - 支持所有协议类型包括VLESS. Source: malio项目移植 }}
+                $Rule['type'] = 'all';
                 $getListExtend = $Rule['extend'] ? self::getListExtend($user, 'v2rayn') : [];
                 break;
             default: // SSR

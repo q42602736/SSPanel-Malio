@@ -41,6 +41,17 @@ class AppURI
                     case 'trojan':
                         $return = ($item['remark'] . ' = trojan, ' . $item['address'] . ', ' . $item['port'] . ', password=' . $item['passwd']) . ", sni=" . $item['host'];
                         break;
+                    // {{ AURA-X: Add - 添加HY2节点Surge配置生成支持. Source: HY2协议移植 }}
+                    case 'hysteria2':
+                        $return = ($item['remark'] . ' = hysteria2, ' . $item['address'] . ', ' . $item['port'] . ', password=' . $item['passwd']);
+                        // {{ AURA-X: Add - 添加混淆参数支持. Source: 修复HY2订阅混淆密码缺失问题 }}
+                        if (isset($item['obfs']) && $item['obfs'] !== '') {
+                            $return .= ', obfs=' . $item['obfs'];
+                        }
+                        if (isset($item['obfs_password']) && $item['obfs_password'] !== '') {
+                            $return .= ', obfs-password=' . $item['obfs_password'];
+                        }
+                        break;
                 }
                 break;
         }
@@ -286,6 +297,54 @@ class AppURI
                     'sni'         => $item['host']
                 ];
                 break;
+            // {{ AURA-X: Add - 添加HY2节点Clash配置生成支持. Source: HY2协议移植 }}
+            case 'hysteria2':
+                $return = [
+                    'name'        => $item['remark'],
+                    'type'        => 'hysteria2',
+                    'server'      => $item['address'],
+                    'port'        => $item['port'],
+                    'password'    => $item['passwd']
+                ];
+                // {{ AURA-X: Modify - 修复plain+密码的矛盾配置. Source: 修复Clash连接失败问题 }}
+                if (isset($item['obfs_password']) && $item['obfs_password'] !== '' && $item['obfs_password'] !== 'password') {
+                    // 有有效混淆密码，使用salamander混淆
+                    $return['obfs'] = 'salamander';
+                    $return['obfs-password'] = $item['obfs_password'];
+                } elseif (isset($item['obfs']) && $item['obfs'] !== '' && $item['obfs'] !== 'plain') {
+                    // 有非plain混淆类型，直接使用
+                    $return['obfs'] = $item['obfs'];
+                    if (isset($item['obfs_password']) && $item['obfs_password'] !== '') {
+                        $return['obfs-password'] = $item['obfs_password'];
+                    }
+                }
+                // plain且无有效密码时不设置obfs字段（无混淆）
+                break;
+            // {{ AURA-X: Add - 添加VLESS节点Clash配置生成支持. Source: malio项目移植 }}
+            case 'vless':
+                $return = [
+                    'name'   => $item['remark'],
+                    'type'   => 'vless',
+                    'server' => $item['address'],
+                    'port'   => $item['port'],
+                    'uuid'   => $item['uuid'],
+                    'udp'    => true
+                ];
+                if ($item['flow'] != '') {
+                    $return['flow'] = $item['flow'];
+                }
+                if ($item['security'] == 'reality') {
+                    $return['tls'] = true;
+                    $return['reality-opts'] = [
+                        'public-key' => $item['reality']['publicKey'],
+                        'short-id'   => $item['reality']['shortId']
+                    ];
+                    $return['servername'] = $item['reality']['serverName'];
+                    $return['client-fingerprint'] = 'chrome';
+                } elseif ($item['security'] == 'tls') {
+                    $return['tls'] = true;
+                }
+                break;
         }
         return $return;
     }
@@ -366,6 +425,44 @@ class AppURI
             case 'trojan':
                 $return  = ('trojan://' . $item['passwd'] . '@' . $item['address'] . ':' . $item['port']);
                 $return .= ('?peer=' . $item['host'] . '#' . rawurlencode($item['remark']));
+                break;
+            // {{ AURA-X: Add - 添加HY2节点Shadowrocket配置生成支持. Source: HY2协议移植 }}
+            case 'hysteria2':
+                $return  = ('hysteria2://' . $item['passwd'] . '@' . $item['address'] . ':' . $item['port']);
+                $params = [];
+                // {{ AURA-X: Add - 添加混淆参数支持. Source: 修复HY2订阅混淆密码缺失问题 }}
+                if (isset($item['obfs']) && $item['obfs'] !== '') {
+                    $params[] = 'obfs=' . urlencode($item['obfs']);
+                }
+                if (isset($item['obfs_password']) && $item['obfs_password'] !== '') {
+                    $params[] = 'obfs-password=' . urlencode($item['obfs_password']);
+                }
+                if (!empty($params)) {
+                    $return .= ('?' . implode('&', $params) . '#' . rawurlencode($item['remark']));
+                } else {
+                    $return .= ('?#' . rawurlencode($item['remark']));
+                }
+                break;
+            // {{ AURA-X: Add - 添加VLESS节点Shadowrocket配置生成支持. Source: malio项目移植 }}
+            case 'vless':
+                $return = 'vless://' . $item['uuid'] . '@' . $item['address'] . ':' . $item['port'];
+                $params = [];
+                if ($item['security'] == 'reality') {
+                    $params[] = 'security=reality';
+                    $params[] = 'pbk=' . $item['reality']['publicKey'];
+                    $params[] = 'sid=' . $item['reality']['shortId'];
+                    $params[] = 'sni=' . $item['reality']['serverName'];
+                    $params[] = 'fp=chrome';
+                } elseif ($item['security'] == 'tls') {
+                    $params[] = 'security=tls';
+                }
+                if ($item['flow'] != '') {
+                    $params[] = 'flow=' . $item['flow'];
+                }
+                if (!empty($params)) {
+                    $return .= '?' . implode('&', $params);
+                }
+                $return .= '#' . rawurlencode($item['remark']);
                 break;
         }
         return $return;

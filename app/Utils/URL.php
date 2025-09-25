@@ -268,9 +268,18 @@ class URL
             case 'trojan':
                 $sort = [14];
                 break;
+            // {{ AURA-X: Add - 添加VLESS节点类型支持. Source: malio项目移植 }}
+            case 'vless':
+                $sort = [15, 16];
+                break;
+            // {{ AURA-X: Add - 添加HY2节点类型支持. Source: malio项目移植 }}
+            case 'hysteria2':
+                $sort = [17];
+                break;
             default:
                 $Rule['type'] = 'all';
-                $sort = [0, 10, 11, 12, 13, 14];
+                // {{ AURA-X: Modify - 添加VLESS和HY2节点(15,16,17)到默认支持列表. Source: malio项目移植 }}
+                $sort = [0, 10, 11, 12, 13, 14, 15, 16, 17];
                 break;
         }
         if ($user->is_admin) {
@@ -299,7 +308,8 @@ class URL
             $nodes = $node_query->orderBy('name')->get();
         }
         $return_array = array();
-        if ($is_mu != 0 && $Rule['type'] != 'vmess' && $Rule['type'] != 'trojan') {
+        // {{ AURA-X: Modify - 添加VLESS和HY2到排除列表，避免多端口处理. Source: HY2协议移植 }}
+        if ($is_mu != 0 && $Rule['type'] != 'vmess' && $Rule['type'] != 'trojan' && $Rule['type'] != 'vless' && $Rule['type'] != 'hysteria2') {
             $mu_node_query = Node::query();
             $mu_node_query->where('sort', 9)->where('type', '1');
             if ($user->is_admin) {
@@ -365,6 +375,30 @@ class URL
                 if (in_array($node->sort, [14]) && (($Rule['type'] == 'all' && $x == 0) || ($Rule['type'] == 'trojan'))) {
                     // Trojan
                     $item = self::getTrojanItem($user, $node, $emoji);
+                    if ($item != null) {
+                        $find = (isset($Rule['content']['regex']) && $Rule['content']['regex'] != '' ? ConfController::getMatchProxy($item, ['content' => ['regex' => $Rule['content']['regex']]]) : true);
+                        if ($find) {
+                            $return_array[] = $item;
+                        }
+                    }
+                    continue;
+                }
+                // {{ AURA-X: Add - 添加VLESS节点处理逻辑. Source: malio项目移植 }}
+                if (in_array($node->sort, [15, 16]) && (($Rule['type'] == 'all' && $x == 0) || ($Rule['type'] == 'vless'))) {
+                    // VLESS
+                    $item = self::getVlessItem($user, $node, $emoji);
+                    if ($item != null) {
+                        $find = (isset($Rule['content']['regex']) && $Rule['content']['regex'] != '' ? ConfController::getMatchProxy($item, ['content' => ['regex' => $Rule['content']['regex']]]) : true);
+                        if ($find) {
+                            $return_array[] = $item;
+                        }
+                    }
+                    continue;
+                }
+                // {{ AURA-X: Add - 添加HY2节点处理逻辑. Source: HY2协议移植 }}
+                if (in_array($node->sort, [17]) && (($Rule['type'] == 'all' && $x == 0) || ($Rule['type'] == 'hysteria2'))) {
+                    // Hysteria2
+                    $item = self::getHy2Item($user, $node, $emoji);
                     if ($item != null) {
                         $find = (isset($Rule['content']['regex']) && $Rule['content']['regex'] != '' ? ConfController::getMatchProxy($item, ['content' => ['regex' => $Rule['content']['regex']]]) : true);
                         if ($find) {
@@ -546,6 +580,18 @@ class URL
         foreach ($items as $item) {
             if ($item['type'] == 'vmess') {
                 $out = LinkController::getListItem($item, 'v2rayn');
+            // {{ AURA-X: Add - 添加VLESS节点订阅生成支持. Source: malio项目移植 }}
+            } elseif ($item['type'] == 'vless') {
+                $out = LinkController::getListItem($item, 'shadowrocket');
+            } elseif ($item['type'] == 'trojan') {
+                $out = LinkController::getListItem($item, 'shadowrocket');
+            // {{ AURA-X: Add - 添加HY2节点订阅生成支持. Source: HY2协议移植 }}
+            } elseif ($item['type'] == 'hysteria2') {
+                $out = LinkController::getListItem($item, 'shadowrocket');
+            } elseif ($item['type'] == 'ss') {
+                $out = LinkController::getListItem($item, 'ss');
+            } elseif ($item['type'] == 'ssr') {
+                $out = LinkController::getListItem($item, 'ssr');
             } else {
                 $out = LinkController::getListItem($item, $Rule['type']);
             }
@@ -705,6 +751,128 @@ class URL
                 json_encode($item, 320)
             );
         }
+
+        return $item;
+    }
+
+    /**
+     * 获取所有 VLESS 节点
+     *
+     * @param User $user 用户
+     * @param bool $emoji
+     *
+     * @return array
+     */
+    // {{ AURA-X: Add - 添加VLESS节点获取函数. Source: malio项目移植 }}
+    public static function getAllVless($user, $emoji = false)
+    {
+        $return_array = array();
+        $nodes = Node::whereIn('sort', [15, 16])
+            ->where('type', '1')
+            ->orderBy('name')
+            ->get();
+        foreach ($nodes as $node) {
+            $item = self::getVlessItem($user, $node, $emoji);
+            if ($item != null) {
+                $return_array[] = $item;
+            }
+        }
+        return $return_array;
+    }
+
+    /**
+     * VLESS 节点
+     *
+     * @param User $user 用户
+     * @param Node $node
+     * @param bool $emoji
+     *
+     * @return array
+     */
+    // {{ AURA-X: Add - 添加VLESS节点处理函数. Source: malio项目移植 }}
+    public static function getVlessItem($user, $node, $emoji = false)
+    {
+        $server = explode(';', $node->server);
+        $opt    = [];
+        if (isset($server[1])) {
+            // 使用parse_str支持&分隔的参数格式
+            parse_str($server[1], $opt);
+        }
+
+        $item['remark']   = ($emoji == true ? Tools::addEmoji($node->name) : $node->name);
+        $item['type']     = 'vless';
+        $item['address']  = $server[0];
+        $item['port']     = (isset($opt['port']) ? (int) $opt['port'] : 443);
+        $item['uuid']     = $user->uuid;
+        $item['flow']     = (isset($opt['flow']) ? $opt['flow'] : '');
+        $item['security'] = (isset($opt['security']) ? $opt['security'] : 'none');
+        $item['class']    = $node->node_class;
+        $item['group']    = Config::get('appName');
+        $item['ratio']    = $node->traffic_rate;
+
+        // Reality 协议特殊处理
+        if ($item['security'] == 'reality') {
+            $item['reality'] = [
+                'dest'        => (isset($opt['dest']) ? $opt['dest'] : ''),
+                'serverPort'  => (isset($opt['serverPort']) ? (int) $opt['serverPort'] : 443),
+                'serverName'  => (isset($opt['serverName']) ? $opt['serverName'] : ''),
+                'privateKey'  => (isset($opt['privateKey']) ? $opt['privateKey'] : ''),
+                'publicKey'   => (isset($opt['publicKey']) ? $opt['publicKey'] : ''),
+                'shortId'     => (isset($opt['shortId']) ? $opt['shortId'] : ''),
+            ];
+        }
+
+        return $item;
+    }
+
+    /**
+     * 获取 HY2 节点配置
+     *
+     * @param object $user
+     * @param object $node
+     * @param bool $emoji
+     *
+     * @return array
+     */
+    // {{ AURA-X: Add - 添加HY2节点处理函数. Source: HY2协议移植 }}
+    public static function getHy2Item($user, $node, $emoji = false)
+    {
+        $server = explode(';', $node->server);
+        $opt    = [];
+        if (isset($server[1])) {
+            // 使用parse_str支持&分隔的参数格式
+            parse_str($server[1], $opt);
+        }
+
+        // {{ AURA-X: Add - 添加HY2配置解析调试日志. Source: 调试HY2混淆密码问题 }}
+        error_log("DEBUG: HY2 node server config: " . $node->server);
+        error_log("DEBUG: HY2 parsed options: " . json_encode($opt));
+
+        $item['remark']   = ($emoji == true ? Tools::addEmoji($node->name) : $node->name);
+        $item['type']     = 'hysteria2';
+        $item['address']  = $server[0];
+        $item['port']     = (isset($opt['port']) ? (int) $opt['port'] : 443);
+        $item['passwd']   = $user->uuid;
+        $item['up_mbps']  = (isset($opt['up_mbps']) ? (int) $opt['up_mbps'] : 100);
+        $item['down_mbps'] = (isset($opt['down_mbps']) ? (int) $opt['down_mbps'] : 100);
+        // {{ AURA-X: Modify - 添加与V2bX相同的智能混淆处理逻辑. Source: 修复obfs=plain问题 }}
+        $obfs_type = (isset($opt['obfs']) ? $opt['obfs'] : 'plain');
+        $obfs_password = (isset($opt['obfs_password']) ? $opt['obfs_password'] : '');
+
+        // 智能处理混淆配置：如果提供了密码但类型是plain，自动切换到salamander
+        if ($obfs_password !== '' && $obfs_password !== 'password' && ($obfs_type === '' || $obfs_type === 'plain')) {
+            $obfs_type = 'salamander';
+        } elseif ($obfs_type === '') {
+            $obfs_type = 'plain'; // 默认无混淆
+        }
+
+        $item['obfs'] = $obfs_type;
+        $item['obfs_password'] = $obfs_password;
+        $item['ignore_client_bandwidth'] = (isset($opt['ignore_client_bandwidth']) ? $opt['ignore_client_bandwidth'] : 'false');
+        $item['allow_insecure'] = (isset($opt['allow_insecure']) ? $opt['allow_insecure'] : 'false');
+        $item['class']    = $node->node_class;
+        $item['group']    = Config::get('appName');
+        $item['ratio']    = $node->traffic_rate;
 
         return $item;
     }

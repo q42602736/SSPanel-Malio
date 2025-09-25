@@ -52,7 +52,10 @@ class NodeController extends BaseController
             ];
             return $this->echoJson($response, $res);
         }
-        if (in_array($node->sort, [0, 10])) {
+        // {{ AURA-X: Modify - 对VLESS和HY2节点(15,16,17)返回完整server字段以支持V2bX. Source: HY2协议移植 }}
+        if (in_array($node->sort, [15, 16, 17])) {
+            $node_server = $node->server;
+        } elseif (in_array($node->sort, [0, 10])) {
             $node_explode = explode(';', $node->server);
             $node_server = $node_explode[0];
         } else {

@@ -119,6 +119,10 @@
                                             <option value="13" {if $node->sort==13}selected{/if}>Shadowsocks
                                                 V2Ray-Plugin
                                             </option>
+                                            <option value="14" {if $node->sort==14}selected{/if}>Trojan</option>
+                                            <option value="15" {if $node->sort==15}selected{/if}>VLESS TCP</option>
+                                            <option value="16" {if $node->sort==16}selected{/if}>VLESS Reality</option>
+                                            <option value="17" {if $node->sort==17}selected{/if}>Hysteria2</option>
                                         </select>
                                     </div>
                                 </div>

@@ -92,7 +92,8 @@ Vue.config.productionTip = false
 
 let validate, captcha
 window.validate = validate
-window.captha = captcha
+// {{ AURA-X: Fix - 修复拼写错误 captha -> captcha }}
+window.captcha = captcha
 
 Vue.directive('uimclip', Uimclip)
 

@@ -12,6 +12,7 @@ use App\Services\Config;
 use Ozdemir\Datatables\Datatables;
 use App\Utils\DatatablesHelper;
 use App\Utils\DNSoverHTTPS;
+use Exception;
 
 class NodeController extends AdminController
 {
@@ -40,7 +41,9 @@ class NodeController extends AdminController
 
     public function add($request, $response, $args)
     {
-        $node = new Node();
+        // {{ AURA-X: Add - 添加错误处理和调试信息. Source: 调试节点创建问题 }}
+        try {
+            $node = new Node();
         $node->name = $request->getParam('name');
         $node->server = trim($request->getParam('server'));
         $node->method = $request->getParam('method');
@@ -60,7 +63,8 @@ class NodeController extends AdminController
             $req_node_ip = $node->server;
         }
 
-        if (in_array($node->sort, array(0, 1, 10, 11, 12, 13))) {
+        // {{ AURA-X: Modify - 添加VLESS和HY2节点类型(15,16,17)到IP解析处理. Source: 修复节点创建错误 }}
+        if (in_array($node->sort, array(0, 1, 10, 11, 12, 13, 15, 16, 17))) {
             $server_list = explode(';', $node->server);
             if (!Tools::is_ip($server_list[0])) {
                 $node->node_ip = gethostbyname($server_list[0]);
@@ -86,7 +90,8 @@ class NodeController extends AdminController
         $node->node_bandwidth_limit = $request->getParam('node_bandwidth_limit') * 1024 * 1024 * 1024;
         $node->bandwidthlimit_resetday = $request->getParam('bandwidthlimit_resetday');
 
-        if (in_array($node->sort, array(11, 12, 13))) {
+        // {{ AURA-X: Modify - 添加VLESS和HY2节点类型(15,16,17)到多用户模式设置. Source: 修复节点创建错误 }}
+        if (in_array($node->sort, array(11, 12, 13, 15, 16, 17))) {
             $node->mu_only = 1;
         }
 
@@ -109,9 +114,15 @@ class NodeController extends AdminController
 
         Tools::delSubCache();
 
-        $rs['ret'] = 1;
-        $rs['msg'] = '节点添加成功';
-        return $response->getBody()->write(json_encode($rs));
+            $rs['ret'] = 1;
+            $rs['msg'] = '节点添加成功';
+            return $response->getBody()->write(json_encode($rs));
+        } catch (Exception $e) {
+            // {{ AURA-X: Add - 捕获异常并返回错误信息. Source: 调试节点创建问题 }}
+            $rs['ret'] = 0;
+            $rs['msg'] = '节点创建失败：' . $e->getMessage();
+            return $response->getBody()->write(json_encode($rs));
+        }
     }
 
     public function edit($request, $response, $args)
@@ -145,7 +156,8 @@ class NodeController extends AdminController
         }
 
         $success = true;
-        if (in_array($node->sort, array(0, 1, 10, 11, 12, 13))) {
+        // {{ AURA-X: Modify - 添加VLESS和HY2节点类型(15,16,17)到IP变更处理. Source: 修复节点创建错误 }}
+        if (in_array($node->sort, array(0, 1, 10, 11, 12, 13, 15, 16, 17))) {
             $server_list = explode(';', $node->server);
             if (!Tools::is_ip($server_list[0])) {
                 $success = $node->changeNodeIp($server_list[0]);
@@ -162,7 +174,8 @@ class NodeController extends AdminController
             return $response->getBody()->write(json_encode($rs));
         }
 
-        if (in_array($node->sort, array(0, 10, 11, 12, 13))) {
+        // {{ AURA-X: Modify - 添加VLESS和HY2节点类型到中继规则更新. Source: 修复节点创建错误 }}
+        if (in_array($node->sort, array(0, 10, 11, 12, 13, 15, 16, 17))) {
             Tools::updateRelayRuleIp($node);
         }
 
@@ -190,7 +203,8 @@ class NodeController extends AdminController
         $node->node_bandwidth_limit = $request->getParam('node_bandwidth_limit') * 1024 * 1024 * 1024;
         $node->bandwidthlimit_resetday = $request->getParam('bandwidthlimit_resetday');
 
-        if (in_array($node->sort, array(11, 12, 13))) {
+        // {{ AURA-X: Modify - 添加VLESS和HY2节点类型(15,16,17)到多用户模式设置. Source: 修复节点创建错误 }}
+        if (in_array($node->sort, array(11, 12, 13, 15, 16, 17))) {
             $node->mu_only = 1;
         }
 
@@ -281,7 +295,8 @@ class NodeController extends AdminController
         });
 
         $datatables->edit('outaddress', static function ($data) {
-            return (in_array($data['sort'], [0, 10, 11, 12, 13, 14]) ? explode(';', $data['server'])[0] : '');
+            // {{ AURA-X: Modify - 添加VLESS和HY2节点类型(15,16,17)到地址显示. Source: 修复节点创建错误 }}
+            return (in_array($data['sort'], [0, 10, 11, 12, 13, 14, 15, 16, 17]) ? explode(';', $data['server'])[0] : '');
         });
 
         $datatables->edit('node_bandwidth', static function ($data) {
@@ -324,6 +339,16 @@ class NodeController extends AdminController
                     break;
                 case 14:
                     $sort = 'Trojan';
+                    break;
+                // {{ AURA-X: Add - 添加VLESS和HY2节点类型显示. Source: HY2协议移植 }}
+                case 15:
+                    $sort = 'VLESS TCP';
+                    break;
+                case 16:
+                    $sort = 'VLESS Reality';
+                    break;
+                case 17:
+                    $sort = 'Hysteria2';
                     break;
                 default:
                     $sort = '系统保留';

@@ -112,6 +112,10 @@
                                             <option value="11">V2Ray</option>
                                             <option value="12">V2Ray 中转</option>
                                             <option value="13">Shadowsocks V2Ray-Plugin</option>
+                                            <option value="14">Trojan</option>
+                                            <option value="15">VLESS TCP</option>
+                                            <option value="16">VLESS Reality</option>
+                                            <option value="17">Hysteria2</option>
                                         </select>
                                     </div>
                                 </div>

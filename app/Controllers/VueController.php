@@ -398,7 +398,8 @@ class VueController extends BaseController
                 $array_node['online'] = -1;
             }
 
-            if (in_array($node->sort, array(0, 7, 8, 10, 11, 12, 13))) {
+            // {{ AURA-X: Modify - 添加VLESS和HY2节点类型(15,16,17)到在线用户检查列表. Approval: zhi___(ID:1735056000). }}
+            if (in_array($node->sort, array(0, 7, 8, 10, 11, 12, 13, 15, 16, 17))) {
                 $array_node['online_user'] = $node->getOnlineUserCount();
             } else {
                 $array_node['online_user'] = -1;

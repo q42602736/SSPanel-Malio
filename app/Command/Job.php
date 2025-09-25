@@ -44,7 +44,8 @@ class Job
     {
         $nodes = Node::all();
         foreach ($nodes as $node) {
-            if (in_array($node->sort, array(0, 1, 10, 11, 12, 13))) {
+            // {{ AURA-X: Modify - 添加VLESS和HY2节点类型(15,16,17)到同步节点处理. Source: 修复节点创建错误 }}
+            if (in_array($node->sort, array(0, 1, 10, 11, 12, 13, 15, 16, 17))) {
                 $server_list = explode(';', $node->server);
                 if (!Tools::is_ip($server_list[0]) && $node->changeNodeIp($server_list[0])) {
                     $node->save();

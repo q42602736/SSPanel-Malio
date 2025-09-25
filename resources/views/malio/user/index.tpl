@@ -341,7 +341,15 @@
                       <div class="buttons">
                         {if (in_array("ss",$malio_config['support_sub_type'])) || (in_array("v2ray",$malio_config['support_sub_type']))}
                         {if (!in_array("clash",$malio_config['index_hidden_import_buttons']))}
-                          <a href="##" class="btn btn-icon icon-left btn-primary btn-clash btn-lg btn-round" onclick="importSublink('clash')"><i class="malio-clash"></i> {$i18n->get('import-clash-config')}</a>
+                          <div class="dropdown d-inline">
+                            <button class="btn btn-primary btn-clash dropdown-toggle btn-icon btn-round btn-lg" type="button" id="dropdownMenuButtonClash" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                              <i class="malio-clash mr-1"></i> {$i18n->get('import-clash-config')}
+                            </button>
+                            <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 28px, 0px); top: 0px; left: 0px; will-change: transform;">
+                              <a class="dropdown-item" href="##" onclick="importSublink('clash')">一键导入 Clash</a>
+                              <a class="dropdown-item copy-text" href="##" data-clipboard-text="{$subInfo['clash']}">复制 Clash 订阅链接</a>
+                            </div>
+                          </div>
                         {/if}
                         {/if}
                         
